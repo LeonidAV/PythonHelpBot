@@ -1,4 +1,6 @@
 # PythonHelpBot
+![ciwlCWa](https://user-images.githubusercontent.com/98047281/216026824-8a80b308-41bb-4dfa-8b01-4b1ed0eadce8.png)
+
 
 Telegram бот - помощник для начинающих программистов на Python
 
