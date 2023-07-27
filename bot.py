@@ -2,8 +2,25 @@ import telebot
 from telebot import types
 from wiki import getwiki
 from weather import get_weather
+from datetime import datetime
+from pycbrf import ExchangeRates
 
 bot = telebot.TeleBot('5507672712:AAHfDqT2EMVsAjlVM6d6ByhT20hFKAm5_ww')
+
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id,
+                      '<b> 🙃 Привет друг!🙃</b>\n\n'
+                      '<b>Это PythonHelpBot🤖</b>\n\n'
+                      '<b>Он будет твоим помощником в поиске нужных ответов🙈</b>\n'
+                      '<b>Не стесняйся обращаться😊</b>\n\n'
+                      '<b>Доступные команды ниже.</b>\n\n'
+                      '<b>• /help - Сейчас появятся📌📌📌\n\n</b>'
+                      '<b>• /wiki - Вики 🧠\n\n</b>'
+                      '<b>• /money - Курсы валют к рублю💰\n\n</b>'
+                      '<b>• /weather - Погода⛅\n\n</b>',
+                      parse_mode='HTML')
 
 
 @bot.message_handler(commands=["wiki"])
@@ -32,43 +49,59 @@ def weather(message):
     asking(message)
 
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id,
-                      '<b> 🙃 Привет друг!🙃</b>\n\n'
-                      '<b>Это PythonHelpBot🤖</b>\n\n'
-                      '<b>Он будет твоим помощником в поиске нужных ответов🙈</b>\n'
-                      '<b>Не стесняйся обращаться😊</b>\n\n'
-                      '<b>Пока доступна одна команда, которая выведет бесконечное множество кнопок.</b>\n'
-                      '<b><u>• /help - Сейчас появятся📌📌📌\n\n</u></b>'
-                      '<b><u>• /wiki - Вики 🧠\n\n</u></b>'
-                      '<b><u>• /weather - Погода⛅\n\n</u></b>',
-                      parse_mode='HTML')
+@bot.message_handler(commands=['money'])
+def money(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    usd = types.KeyboardButton('USD')
+    eur = types.KeyboardButton('EUR')
+    gbp = types.KeyboardButton('GBP')
+    liry = types.KeyboardButton('TRY')
+    chf = types.KeyboardButton('CHF')
+    cny = types.KeyboardButton('CNY')
+    cad = types.KeyboardButton('CAD')
+    markup.add(usd, eur, gbp, liry, chf, cny, cad)
+    bot.send_message(message.chat.id, 'Выбирай нужную валюту, и узнай курс рубля!', reply_markup=markup)
 
 
 @bot.message_handler(commands=['help'])
 def get_user(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    programm = types.KeyboardButton('Программы')
-    migrate = types.KeyboardButton('Миграции')
-    venv = types.KeyboardButton('Виртуальное окружение')
-    git = types.KeyboardButton('Команды Git')
-    codestail = types.KeyboardButton('Кодстайл')
+    podskazka = types.KeyboardButton('Подсказки по Python')
     really = types.KeyboardButton('Полезные ссылки')
-    requirements = types.KeyboardButton('Requirements')
     pythonkurs = types.KeyboardButton('Курсы по Python')
-    markup.add(migrate, venv, git, codestail, programm, really, requirements, pythonkurs)
+    github = types.KeyboardButton('Оформление Github')
+    pythongui = types.KeyboardButton('Обучение Python GUI')
+    markup.add(really, pythonkurs, github, pythongui, podskazka)
     bot.send_message(message.chat.id, '❗Нажимай на них скорее❗', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
 def info(message):
     if message.chat.type == 'private':
+        message_norm = message.text.strip().lower()
+
+        if message_norm in ['usd', 'eur', 'gbp', 'try', 'chf', 'cny', 'cad']:
+            rates = ExchangeRates(datetime.now())
+            bot.send_message(chat_id=message.chat.id,
+                             text=f"<b> Один {message_norm.upper()} равен {float(rates[message_norm.upper()].rate)} руб.</b>",
+                             parse_mode="html")
         if message.text == 'Миграции':
             bot.send_message(message.chat.id,
                              'python manage.py makemigrations\n'
                              'python manage.py migrate\n',
                              parse_mode='html')
+        elif message.text == 'Подсказки по Python':
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            programm = types.KeyboardButton('Программы')
+            migrate = types.KeyboardButton('Миграции')
+            venv = types.KeyboardButton('Виртуальное окружение')
+            git = types.KeyboardButton('Команды Git')
+            codestail = types.KeyboardButton('Кодстайл')
+            requirements = types.KeyboardButton('Requirements')
+            back = types.KeyboardButton('Назад')
+            markup.add(programm, migrate, venv, git, codestail, requirements, back)
+            bot.send_message(message.chat.id, 'Подсказки по Python', reply_markup=markup)
+
         elif message.text == 'Виртуальное окружение':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             window = types.KeyboardButton('Windows')
@@ -167,12 +200,12 @@ def info(message):
                              'https://stepik.org/catalog/search?free=true&q=python',
                              parse_mode='html')
         elif message.text == 'Requirements':
-            really = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            requirements = types.ReplyKeyboardMarkup(resize_keyboard=True)
             install = types.KeyboardButton('Установка')
             doc = types.KeyboardButton('Документация')
             back = types.KeyboardButton('Назад')
-            really.add(install, doc, back)
-            bot.send_message(message.chat.id, 'Requirements', reply_markup=really)
+            requirements.add(install, doc, back)
+            bot.send_message(message.chat.id, 'Requirements', reply_markup=requirements)
         elif message.text == 'Установка':
             bot.send_message(message.chat.id,
                              'pip install -r requirements.txt',
@@ -184,15 +217,15 @@ def info(message):
                              parse_mode='html')
 
         elif message.text == 'Курсы по Python':
-            really = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            pythonkurs = types.ReplyKeyboardMarkup(resize_keyboard=True)
             one = types.KeyboardButton('Создание мини-блога')
             two = types.KeyboardButton('Создание сайта на Django')
             three = types.KeyboardButton('Погодное приложение на Django за час')
             four = types.KeyboardButton('Создаем веб-приложение ToDo на Django + Semantic UI')
             five = types.KeyboardButton('Django 4 пишем сайт с нуля')
             back = types.KeyboardButton('Назад')
-            really.add(one, two, three, four, five, back)
-            bot.send_message(message.chat.id, 'Курсы по Python', reply_markup=really)
+            pythonkurs.add(one, two, three, four, five, back)
+            bot.send_message(message.chat.id, 'Курсы по Python', reply_markup=pythonkurs)
         elif message.text == 'Создание мини-блога':
             bot.send_message(message.chat.id,
                              'https://www.youtube.com/watch?v=wCDn6pYhLxg&list=PLs2IpQwiXpT2V0brYrq1gxbRJVeR9t5jY&index=1',
@@ -214,15 +247,40 @@ def info(message):
                              'https://www.youtube.com/playlist?list=PLuZJ9n46uMzXVj9JEjULImuBKRVKKS9To',
                              parse_mode='html')
 
+        elif message.text == 'Оформление Github':
+            github= types.ReplyKeyboardMarkup(resize_keyboard=True)
+            gitup = types.KeyboardButton('Оформление профиля')
+            gitreadme = types.KeyboardButton('Оформление README')
+            back = types.KeyboardButton('Назад')
+            github.add(gitup, gitreadme, back)
+            bot.send_message(message.chat.id, 'Оформление Github', reply_markup=github)
+        elif message.text == 'Оформление профиля':
+            bot.send_message(message.chat.id,
+                             'https://www.youtube.com/watch?v=pm17VwdJ6UI',
+                             parse_mode='html')
+        elif message.text == 'Оформление README':
+            bot.send_message(message.chat.id,
+                             'https://www.youtube.com/watch?v=NXNf9aYTCZ0&list=WL&index=4',
+                             parse_mode='html')
+        elif message.text == 'Обучение Python GUI':
+            gui= types.ReplyKeyboardMarkup(resize_keyboard=True)
+            tkinter = types.KeyboardButton('Уроки по Tkinter')
+            back = types.KeyboardButton('Назад')
+            gui.add(tkinter, back)
+            bot.send_message(message.chat.id, 'Оформление Github', reply_markup=gui)
+        elif message.text == 'Уроки по Tkinter':
+            bot.send_message(message.chat.id,
+                             'https://pythonru.com/uroki/obuchenie-python-gui-uroki-po-tkinter#:~:text=%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%BF%D0%B5%D1%80%D0%B2%D0%BE%D0%B3%D0%BE%20%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B3%D0%BE%20%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81%D0%B0&text=%D0%9F%D0%BE%D1%81%D0%BB%D0%B5%D0%B4%D0%BD%D1%8F%D1%8F%20%D1%81%D1%82%D1%80%D0%BE%D0%BA%D0%B0%20%D0%B2%D1%8B%D0%B7%D1%8B%D0%B2%D0%B0%D0%B5%D1%82%20%D1%84%D1%83%D0%BD%D0%BA%D1%86%D0%B8%D1%8E%20mainloop,%D0%B4%D0%BB%D1%8F%20%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8F%20%D0%BD%D0%B8%D1%87%D0%B5%D0%B3%D0%BE%20%D0%BD%D0%B5%20%D0%BE%D1%82%D0%BE%D0%B1%D1%80%D0%B0%D0%B7%D0%B8%D1%82%D1%81%D1%8F.',
+                             parse_mode='html')
+
         elif message.text == 'Назад':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-            programm = types.KeyboardButton('Программы')
-            migrate = types.KeyboardButton('Миграции')
-            venv = types.KeyboardButton('Виртуальное окружение')
-            git = types.KeyboardButton('Команды Git')
-            codestail = types.KeyboardButton('Кодстайл')
+            podskazka = types.KeyboardButton('Подсказки по Python')
             really = types.KeyboardButton('Полезные ссылки')
-            markup.add(migrate, venv, git, codestail, programm, really)
+            pythonkurs = types.KeyboardButton('Курсы по Python')
+            github = types.KeyboardButton('Оформление Github')
+            pythongui = types.KeyboardButton('Обучение Python GUI')
+            markup.add(really, pythonkurs, github, pythongui, podskazka)
             bot.send_message(message.chat.id, '❗Нажимай на них скорее❗', reply_markup=markup)
 
 
