@@ -3,9 +3,13 @@
 Telegram бот - помощник для начинающих программистов на Python
 
 Технологии:
+
 Библиотека pyTelegramBotAPI
+
 Telegramm BotFather
+
 python 3.7
+
 PyCharm
 
 
